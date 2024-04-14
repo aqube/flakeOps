@@ -12,6 +12,9 @@ on:
 jobs:
   check:
     runs-on: ubuntu-22.04
+    environment:
+      name: Niedernhausen
+      url: "https://app.cachix.org/deploy/workspace/aqube"
     permissions:
       id-token: "write"
       contents: "read"
@@ -25,5 +28,14 @@ jobs:
           name: aqube
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - uses: DeterminateSystems/flake-checker-action@v0.1.18
-      - run: nix build
-      - run: nix flake check
+      - run: nix flake check -Lvv
+        name: "Check flake syntax"
+      - run: nix build --print-build-logs .#cachix-deploy-spec
+        name: "nix build"
+      - name: Deploy
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          CACHIX_ACTIVATE_TOKEN: "${{ secrets.CACHIX_ACTIVATE_TOKEN }}"
+        run: |
+          cachix push aqube ./result
+          cachix deploy activate --async ./result

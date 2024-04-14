@@ -12,6 +12,9 @@
   boot.loader.grub.device = "/dev/sda";
   boot.loader.grub.useOSProber = true;
 
+  # cachix deploy agent
+  services.cachix-agent.enable = true;
+
   networking.hostName = "toaster"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
@@ -46,8 +49,21 @@
     xkbVariant = "";
   };
 
-  # Enable Flakes
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings = {
+    # give the users in this list the right to specify additional substituters via:
+    #    1. `nixConfig.substituters` in `flake.nix`
+    #    2. command line args `--options substituters http://xxx`
+    trusted-users = [ "aqube" ];
+    substituters = [
+      "https://cache.nixos.org"
+      "https://aqube.cachix.org"
+    ];
+    trusted-public-keys = [
+      "aqube.cachix.org-1:ERe7jQ/KiuBHmvNIO8cAxIptfvqDEmw5CWrqXpfWId0="
+    ];
+    # Enable Flakes
+    experimental-features = [ "nix-command" "flakes" ];
+  };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.aqube = {
