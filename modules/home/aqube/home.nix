@@ -21,19 +21,37 @@
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
-  # Better Terminal
-  programs.starship = {
-    enable = true;
-
-    enableBashIntegration = true;
-    enableZshIntegration = true;
-
-    settings =
-      {
-        character = {
-          success_symbol = "[›](bold green)";
-          error_symbol = "[›](bold red)";
-        };
+  programs = {
+    bash = {
+      enable = true;
+      enableCompletion = true;
+      shellAliases = {
+        ll = "ls -lh";
+        la = "ls -a";
+        lla = "ls -la";
       };
+    };
+
+    fzf = {
+      enable = true;
+      enableBashIntegration = true;
+    };
+
+    # Better Terminal
+    starship = {
+      enable = true;
+
+      enableBashIntegration = true;
+      enableZshIntegration = true;
+
+      settings =
+        {
+          character = {
+            success_symbol = "[›](bold green)";
+            error_symbol = "[›](bold red)";
+          };
+        };
+    };
   };
+
 }
