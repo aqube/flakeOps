@@ -20,10 +20,16 @@
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
+    # Cachix for binary cache management
     cachix.url = "github:cachix/cachix";
+
+    # sops-nix for encrypted secrets
+    sops-nix.url = "github:Mic92/sops-nix";
 
     # flake-utils manage system builds and can help to build the
     # same flake for different systems. (e.g. x86_64-linux and aarch64-linux)
+    flake-utils.url = "github:numtide/flake-utils";
+
     # FIXME: check if this can be used
     # inputs.systems.url = "github:nix-systems/x86_64-linux";
     # flake-utils.url = "github:numtide/flake-utils";
@@ -40,8 +46,20 @@
     colmena.url = "github:zhaofengli/colmena";
   };
 
-  outputs = { self, nixpkgs, home-manager, colmena, nixos-hardware, flake-utils, cachix, cachix-deploy-flake, ... }@inputs:
+  outputs =
+    { self
+    , nixpkgs
+    , flake-utils
+    , home-manager
+    , colmena
+    , nixos-hardware
+    , cachix
+    , cachix-deploy-flake
+    , sops-nix
+    , ...
+    } @ inputs:
     let
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
       system = "x86_64-linux";
       pkgs = import "${nixpkgs}" {
         inherit system;
@@ -50,13 +68,13 @@
       };
       cachix-deploy-lib = cachix-deploy-flake.lib pkgs;
     in
-
     {
       # Cachix Deployments
       packages."${system}" = with pkgs; {
         cachix-deploy-spec = cachix-deploy-lib.spec {
           agents = {
             toaster = self.nixosConfigurations.toaster.config.system.build.toplevel;
+            k3s-server-1 = self.nixosConfigurations.k3s-server-1.config.system.build.toplevel;
           };
         };
       };
@@ -68,6 +86,7 @@
           system = "x86_64-linux";
           modules = [
             ./hosts/toaster/configuration.nix
+            sops-nix.nixosModules.sops
             home-manager.nixosModules.home-manager
             {
               home-manager.useGlobalPkgs = true;
@@ -79,8 +98,25 @@
             }
           ];
         };
-      };
 
+        # Raspberry Pi K3s Cluster
+        k3s-server-1 = nixpkgs.lib.nixosSystem {
+          system = "aarch64-linux";
+          modules = [
+            ./hosts/k3s-server-1/configuration.nix
+            nixos-hardware.nixosModules.raspberry-pi-4
+            sops-nix.nixosModules.sops
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.aqube = import ./modules/home/aqube/home.nix;
+              # Optionally, use home-manager.extraSpecialArgs to pass
+              # arguments to home.nix
+            }
+          ];
+        };
+      };
 
       # colmena external deployment output
       colmena = {

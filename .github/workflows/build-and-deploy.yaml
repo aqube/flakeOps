@@ -23,6 +23,8 @@ jobs:
       - uses: cachix/install-nix-action@v26
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          extra_nix_config: "extra-platforms = aarch64-linux"
+      - uses: docker/setup-qemu-action@v3                                    
       - uses: cachix/cachix-action@v14
         with:
           name: aqube
