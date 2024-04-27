@@ -5,7 +5,12 @@
     [
       # Include the results of the hardware scan.
       ./hardware-configuration.nix
+      # FIXME: use a more elegant mechanism to include modules
+      ../../modules/nixos
     ];
+
+  # custom modules configuration
+  modules.services.postgresql.enable = true;
 
   # Bootloader.
   boot.loader.grub.enable = true;
