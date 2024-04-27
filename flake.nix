@@ -86,7 +86,7 @@
         k3s-server-1 = nixpkgs.lib.nixosSystem {
           system = "aarch64-linux";
           modules = [
-            ./hosts/k3s-server-1/configuration.nix
+            ./hosts/pis/k3s-server-1/configuration.nix
             nixos-hardware.nixosModules.raspberry-pi-4
             sops-nix.nixosModules.sops
             home-manager.nixosModules.home-manager
@@ -103,7 +103,7 @@
         k3s-server-2 = nixpkgs.lib.nixosSystem {
           system = "aarch64-linux";
           modules = [
-            ./hosts/k3s-server-2/configuration.nix
+            ./hosts/pis/k3s-server-2/configuration.nix
             nixos-hardware.nixosModules.raspberry-pi-4
             sops-nix.nixosModules.sops
             home-manager.nixosModules.home-manager
@@ -120,7 +120,7 @@
         k3s-agent-1 = nixpkgs.lib.nixosSystem {
           system = "aarch64-linux";
           modules = [
-            ./hosts/k3s-agent-1/configuration.nix
+            ./hosts/pis/k3s-agent-1/configuration.nix
             nixos-hardware.nixosModules.raspberry-pi-4
             sops-nix.nixosModules.sops
             home-manager.nixosModules.home-manager
