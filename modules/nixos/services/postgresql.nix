@@ -7,7 +7,7 @@ let
 in
 {
   options.modules.services.postgresql = {
-    enable = mkBoolOpt false;
+    enable = mkEnableOption "PostgreSQL database server";
   };
 
   config = mkIf cfg.enable {

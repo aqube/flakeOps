@@ -1,4 +1,8 @@
+{ config, pkgs, ... }:
+
 {
-  # my-module = import ./my-module.nix;
-  postgresql = import ./services/postgresql.nix;
+  imports =
+    [
+      ./services/postgresql.nix
+    ];
 }
