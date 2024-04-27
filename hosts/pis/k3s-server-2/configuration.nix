@@ -2,7 +2,7 @@
 
 let
   # Define your hostname.
-  hostname = "k3s-server-1";
+  hostname = "k3s-server-2";
   username = "aqube";
 in
 {

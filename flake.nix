@@ -26,32 +26,14 @@
     # sops-nix for encrypted secrets
     sops-nix.url = "github:Mic92/sops-nix";
 
-    # flake-utils manage system builds and can help to build the
-    # same flake for different systems. (e.g. x86_64-linux and aarch64-linux)
-    flake-utils.url = "github:numtide/flake-utils";
-
-    # FIXME: check if this can be used
-    # inputs.systems.url = "github:nix-systems/x86_64-linux";
-    # flake-utils.url = "github:numtide/flake-utils";
-    # We currently only deploy to "toaster" and only need x86_64-linux
-    # This way "eachDefaultSystem" will only build for x86_64-linux
-    # FIXME: this is a workaround till we also deploy to the Raspberry Pis
-    # inputs.flake-utils.inputs.systems.follows = "systems";
-
     # Cachix Deployment and utils
     cachix-deploy-flake.url = "github:cachix/cachix-deploy-flake";
-
-    # Colmena for external deployment from a dedicated host machine
-    # TODO: replace this with cachix agents/deploy
-    colmena.url = "github:zhaofengli/colmena";
   };
 
   outputs =
     { self
     , nixpkgs
-    , flake-utils
     , home-manager
-    , colmena
     , nixos-hardware
     , cachix
     , cachix-deploy-flake
@@ -59,7 +41,6 @@
     , ...
     } @ inputs:
     let
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
       system = "x86_64-linux";
       pkgs = import "${nixpkgs}" {
         inherit system;
@@ -75,6 +56,8 @@
           agents = {
             toaster = self.nixosConfigurations.toaster.config.system.build.toplevel;
             k3s-server-1 = self.nixosConfigurations.k3s-server-1.config.system.build.toplevel;
+            k3s-server-2 = self.nixosConfigurations.k3s-server-2.config.system.build.toplevel;
+            k3s-agent-1 = self.nixosConfigurations.k3s-agent-1.config.system.build.toplevel;
           };
         };
       };
@@ -116,77 +99,40 @@
             }
           ];
         };
-      };
 
-      # colmena external deployment output
-      colmena = {
-        meta = {
-          nixpkgs = import nixpkgs {
-            system = "x86_64-darwin";
-          };
-        };
-
-        defaults = { pkgs, ... }: {
-          imports = [
-            inputs.nixos-hardware.nixosModules.raspberry-pi-4
-            ./hosts/pis/defaults.nix
+        k3s-server-2 = nixpkgs.lib.nixosSystem {
+          system = "aarch64-linux";
+          modules = [
+            ./hosts/k3s-server-2/configuration.nix
+            nixos-hardware.nixosModules.raspberry-pi-4
+            sops-nix.nixosModules.sops
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.aqube = import ./modules/home/aqube/home.nix;
+              # Optionally, use home-manager.extraSpecialArgs to pass
+              # arguments to home.nix
+            }
           ];
         };
 
-        meepo-1 = {
-          imports = [ ./hosts/pis/meepo-1.nix ];
-
-          nixpkgs.system = "aarch64-linux";
-
-          deployment = {
-            targetHost = "meepo-1";
-            targetUser = "aqube";
-            # TODO: do remote builds
-            buildOnTarget = true;
-          };
+        k3s-agent-1 = nixpkgs.lib.nixosSystem {
+          system = "aarch64-linux";
+          modules = [
+            ./hosts/k3s-agent-1/configuration.nix
+            nixos-hardware.nixosModules.raspberry-pi-4
+            sops-nix.nixosModules.sops
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.aqube = import ./modules/home/aqube/home.nix;
+              # Optionally, use home-manager.extraSpecialArgs to pass
+              # arguments to home.nix
+            }
+          ];
         };
-
-        meepo-2 = {
-          imports = [ ./hosts/pis/meepo-2.nix ];
-
-          nixpkgs.system = "aarch64-linux";
-
-          deployment = {
-            targetHost = "meepo-2";
-            targetUser = "aqube";
-            # TODO: do remote builds
-            buildOnTarget = true;
-          };
-        };
-
-        meepo-3 = {
-          imports = [ ./hosts/pis/meepo-3.nix ];
-
-          nixpkgs.system = "aarch64-linux";
-
-          deployment = {
-            targetHost = "meepo-3";
-            targetUser = "aqube";
-            # TODO: do remote builds
-            buildOnTarget = true;
-          };
-        };
-
-        # deactivated because not buildable at the moment
-        # meepo-4 = {
-        #   imports = [
-        #     (import ./hosts/pis/pi4.nix { hostname = "meepo-4"; username = "aqube"; })
-        #   ];
-        #
-        #   nixpkgs.system = "aarch64-linux";
-        #
-        #   deployment = {
-        #     targetHost = "meepo-4";
-        #     targetUser = "aqube";
-        #     # TODO: do remote builds
-        #     buildOnTarget = true;
-        #   };
-        # };
       };
     };
 }
