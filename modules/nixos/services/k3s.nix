@@ -14,7 +14,7 @@ in
     sops = {
       defaultSopsFile = ../../../secrets/k3s.yaml;
       age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
-      secrets."k3s.server.token" = { };
+      secrets."k3s/server/token" = { };
     };
   };
 }

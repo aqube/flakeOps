@@ -1,0 +1,88 @@
+name: Build and Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+env:
+  nix-conf: |-
+    always-allow-substitutes = true
+    max-jobs = auto
+    extra-platforms = aarch64-linux
+
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v26
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          extra_nix_config: ${{ env.nix-conf }}
+      - uses: cachix/cachix-action@v14
+        with:
+          name: aqube
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          extraPullNames: nix-community
+      - run: nix flake check -Lvv
+        name: "nix flake check"
+
+  show:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v26
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          extra_nix_config: ${{ env.nix-conf }}
+      - uses: cachix/cachix-action@v14
+        with:
+          name: aqube
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          extraPullNames: nix-community
+      - run: nix flake show
+        name: "nix flake show"
+  
+
+    
+
+  build:  
+    runs-on: ubuntu-22.04
+    environment:
+      name: Niedernhausen
+      url: "https://app.cachix.org/deploy/workspace/aqube"
+    permissions:
+      id-token: "write"
+      contents: "read"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v26
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          extra_nix_config: ${{ env.nix-conf }}
+      - uses: docker/setup-qemu-action@v3                                    
+      - uses: cachix/cachix-action@v14
+        with:
+          name: aqube
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          extraPullNames: nix-community
+      - run: nix build --print-build-logs .#cachix-deploy-spec
+        name: "nix build"
+      - name: Push to Cachix
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          cachix push aqube ./result
+      - name: Deploy with Cachix
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        # Rerun if agents are offline
+        timeout-minutes: 1
+        # Don't fail, only because some agents are offline
+        continue-on-error: true
+        env:
+          CACHIX_ACTIVATE_TOKEN: "${{ secrets.CACHIX_ACTIVATE_TOKEN }}"
+        run: |
+          cachix deploy activate --async ./result

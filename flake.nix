@@ -28,6 +28,9 @@
 
     # Cachix Deployment and utils
     cachix-deploy-flake.url = "github:cachix/cachix-deploy-flake";
+
+    # Reduce the build-time
+    nix-fast-build.url = "github:Mic92/nix-fast-build";
   };
 
   outputs =
@@ -38,6 +41,7 @@
     , cachix
     , cachix-deploy-flake
     , sops-nix
+    , nix-fast-build
     , ...
     } @ inputs:
     let

@@ -4,6 +4,13 @@ This repository contains experimental configuration for installing and configuri
 
 With the help of github actions, this should result in local systems that require very little manual maintenance.
 
+# Used tools
+- Home-Manager
+- sops-nix
+- cachix
+  - cachix-deploy-flake
+  - cachix binary cache
+- nix-fast-build
 # 🙏 Inspiration and sources
 - https://gitea.muc.ccc.de/muccc/nixos-deployment
 
