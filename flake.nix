@@ -23,14 +23,8 @@
     # sops-nix for encrypted secrets
     sops-nix.url = "github:Mic92/sops-nix";
 
-    # Cachix for binary cache management
-    cachix.url = "github:cachix/cachix";
-
-    # Cachix Deployment and utils
+    # Cachix Deployment utils
     cachix-deploy-flake.url = "github:cachix/cachix-deploy-flake";
-
-    # Reduce the build-time
-    nix-fast-build.url = "github:Mic92/nix-fast-build";
   };
 
   outputs =

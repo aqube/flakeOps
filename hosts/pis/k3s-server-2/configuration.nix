@@ -8,5 +8,10 @@ let
   };
 in
 {
-  imports = [ raspberryPi4 ];
+  imports = [
+    raspberryPi4
+    ../../../modules/nixos
+  ];
+
+  modules.services.k3s.enable = true;
 }

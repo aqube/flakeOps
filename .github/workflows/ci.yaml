@@ -53,11 +53,9 @@ jobs:
       - run: nix flake show
         name: "nix flake show"
   
-
-    
-
   build:  
     runs-on: ubuntu-22.04
+    needs: [ check]
     environment:
       name: Niedernhausen
       url: "https://app.cachix.org/deploy/workspace/aqube"
