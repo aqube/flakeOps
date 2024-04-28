@@ -11,7 +11,6 @@
   };
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs.inputs.nixpkgs.follows = "nixpkgs";
 
     # NixOS hardware configurations that can be imported
     nixos-hardware.url = "github:nixos/nixos-hardware";
@@ -42,32 +41,12 @@
     , flake-parts
     , ...
     } @ inputs:
-    let
-      system = "x86_64-linux";
-      pkgs = import "${nixpkgs}" {
-        inherit system;
-        # ngrok, vscode, zoom-us, signal-desktop
-        config.allowUnfree = true;
-      };
-      cachix-deploy-lib = cachix-deploy-flake.lib pkgs;
-    in
     flake-parts.lib.mkFlake { inherit inputs; } {
       # https://flake.parts/debug
       debug = true;
 
       # Original Flake Attributes
       flake = {
-        # Cachix Deployments
-        packages."${system}" = with pkgs; {
-          cachix-deploy-spec = cachix-deploy-lib.spec {
-            agents = {
-              toaster = self.nixosConfigurations.toaster.config.system.build.toplevel;
-              k3s-server-1 = self.nixosConfigurations.k3s-server-1.config.system.build.toplevel;
-              k3s-server-2 = self.nixosConfigurations.k3s-server-2.config.system.build.toplevel;
-              k3s-agent-1 = self.nixosConfigurations.k3s-agent-1.config.system.build.toplevel;
-            };
-          };
-        };
 
         nixosConfigurations = {
           # Toaster is a Lenovo ThinkBox with NixOs installed. Currently sitting as a x86 server in the
@@ -135,11 +114,65 @@
       };
 
       # Configure the Systems that you want to build the `perSystem` attributes for
-      systems = [
-        "x86_64-linux"
-        "x86_64-darwin"
-        "aarch64-darwin"
-      ];
-      perSystem = { config, ... }: { };
+      systems = [ "x86_64-linux" "x86_64-darwin" "aarch64-darwin" ];
+
+      # perSystem has some special module parameters. e.g pkgs == inputs.nixpkgs.legacyPackages.${system}.
+      # https://flake.parts/module-arguments#persystem-module-parameters
+      perSystem = { self', system, config, pkgs, ... }: {
+
+        packages = {
+          # Cachix Deployments
+          # TODO: understand how "...config.system.build.toplevel" interprets the "system" part
+          # Is this from let system = "x86_64-linux" or from the nixosSystem.system attribute?
+          cachix-deploy-spec =
+            let
+              # FIXME: if this runs in CI, remove it. We can use the pkgs parameter from perSystem
+              # pkgs = import nixpkgs { inherit system; };
+              cachix-deploy-lib = cachix-deploy-flake.lib pkgs;
+            in
+            cachix-deploy-lib.spec {
+              agents = {
+                toaster = self.nixosConfigurations.toaster.config.system.build.toplevel;
+                k3s-server-1 = self.nixosConfigurations.k3s-server-1.config.system.build.toplevel;
+                k3s-server-2 = self.nixosConfigurations.k3s-server-2.config.system.build.toplevel;
+                k3s-agent-1 = self.nixosConfigurations.k3s-agent-1.config.system.build.toplevel;
+              };
+            };
+
+          # script to update sops keys
+          sops-updatekeys = pkgs.writeShellApplication {
+            name = "sops-updatekeys";
+            runtimeInputs = [ pkgs.sops ];
+
+            text = ''
+              for secretfn in secrets/*.yaml; do
+                sops updatekeys "$secretfn"
+              done
+            '';
+          };
+        };
+
+        apps = {
+          sops-updatekeys = {
+            type = "app";
+            program = "${self'.packages.sops-updatekeys}/bin/sops-updatekeys";
+          };
+        };
+
+
+
+        # nix develop
+        #   devShells = {
+        #     default = nixpkgs.mkShell {
+        #       packages = with pkgs; [
+        #         age
+        #         sops
+        #         nil
+        #       ];
+        #     };
+        #   };
+        # };
+
+      };
     };
 }

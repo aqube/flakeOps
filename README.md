@@ -26,6 +26,7 @@ We use a couple of upstream inputs and tools for our flake. The main ones are:
 - [nixos-generators](https://github.com/nix-community/nixos-generators) to generate Images for our Raspberry Pi's and other devices (RISC-V).
 - [flake-utils](https://github.com/numtide/flake-utils) or [flake-utils-plus](https://github.com/gytis-ivaskevicius/flake-utils-plus) to simplify multi-arch builds. But we would need to test how it works in combination with cachix-deploy.
 - [flake-parts](https://github.com/hercules-ci/flake-parts) to split our flake into smaller parts. This would make it easier to maintain and test the different parts of our infrastructure.
+- [snowfall lib](https://github.com/snowfallorg/lib) - opinionated library for flakes. Looks like a clean way to structure a flake repository and avoid writing boilerplate code.
 - [nix-direnv](https://github.com/nix-community/nix-direnv) to use direnv with nix. This would make it easier to work with this repository by automatically activating a devshell with all required tools.
 
 # Usage
@@ -41,10 +42,9 @@ Because we also store the secrets encrypted in the repository, it's then also en
     ```bash
     nix-shell -p ssh-to-age --run 'cat /etc/ssh/ssh_host_ed25519_key.pub | ssh-to-age'
     ```
-2. Add the key to the encryption configuration in the `.sops.yaml` file and re-encrypt all secrets with the new keys. We plan to add a command to automate this with `mkApp` in the future.
+2. Add the key to the encryption configuration in the `.sops.yaml` file and re-encrypt all secrets with the new keys. This can be done with the provided nix-app `sops-updatekeys`.
     ```bash
-    # repeat this for all secrets
-    nix-shell -p sops --run "sops updatekeys secrets/<secret>"
+    nix run .#sops-updatekeys
     ```
 3. Create a new secret file in the [secrets](./secrets) directory and encrypt it.
 4. Add the secret to a host configuration. This requires a module configuration for the `sops-nix` options. We often create a age-key for the host from the host's ssh-key. This way, we can use the host's ssh-key to decrypt the secrets. If that's the case, add the `sops.age.sshKeyPaths` to the host configuration. Secrets are then defined in the `secrets` attribute. Be careful to use `/` as separators for the specific secrets path and **not** a `.` like in yaml syntax! The secret will then be available in a file on the host at `/run/secrets/<secret-path>`. 
@@ -80,6 +80,7 @@ Because we also store the secrets encrypted in the repository, it's then also en
 - [MUC Nix Configuration](https://gitea.muc.ccc.de/muccc/nixos-deployment) - A great example of a NixOS deployment configuration from the CCC Munich.
 - [lovesegfault/nix-config](https://github.com/lovesegfault/nix-config)
 - [hlissner/dotfiles](https://github.com/hlissner/dotfiles) - [Hey](https://www.youtube.com/watch?v=ZZ5LpwO-An4), it's a Nix configuration repo from one of the nicest people in the Nix/Emacs community.
+- [teevik/config](https://github.com/teevik/Config) - Snowfall example with Cachix agents
 
 ### Misc
 
@@ -88,3 +89,4 @@ Because we also store the secrets encrypted in the repository, it's then also en
 - https://haseebmajid.dev/posts/2023-11-18-how-i-setup-my-raspberry-pi-cluster-with-nixos/
 - https://myme.no/posts/2022-12-01-nixos-on-raspberrypi.html#cross-compiling
 - https://jamesguthrie.ch/blog/deploy-nixos-raspi/
+- https://ayats.org/blog/no-flake-utils/ - A blog post that states you don't need any flake utils
