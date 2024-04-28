@@ -8,6 +8,12 @@ on:
   pull_request:
     branches:
       - main
+
+# Only run one Workflow per branch and cancel old ones if a new commit is pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   nix-conf: |-
     always-allow-substitutes = true
@@ -70,19 +76,18 @@ jobs:
           name: aqube
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
           extraPullNames: nix-community
-      - run: nix build --print-build-logs .#cachix-deploy-spec
-        name: "nix build"
+      - name: "nix build"
+        id: build
+        run: |
+          spec=$(nix build .#cachix-deploy-spec --print-out-paths --print-build-logs)
+          echo "spec_path=$spec" >> $GITHUB_OUTPUT
       - name: Push to Cachix
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: |
-          cachix push aqube ./result
+          cachix push aqube ${{ steps.build.outputs.spec_path }}
       - name: Deploy with Cachix
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        # Rerun if agents are offline
-        timeout-minutes: 1
-        # Don't fail, only because some agents are offline
-        continue-on-error: true
         env:
           CACHIX_ACTIVATE_TOKEN: "${{ secrets.CACHIX_ACTIVATE_TOKEN }}"
         run: |
-          cachix deploy activate --async ./result
+          cachix deploy activate --async ${{ steps.build.outputs.spec_path }}
