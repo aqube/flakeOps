@@ -20,11 +20,11 @@
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
-    # Cachix for binary cache management
-    cachix.url = "github:cachix/cachix";
-
     # sops-nix for encrypted secrets
     sops-nix.url = "github:Mic92/sops-nix";
+
+    # Cachix for binary cache management
+    cachix.url = "github:cachix/cachix";
 
     # Cachix Deployment and utils
     cachix-deploy-flake.url = "github:cachix/cachix-deploy-flake";

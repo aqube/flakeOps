@@ -1,8 +1,15 @@
 keys:
-  - &users:
-    - &alex age1h674mq4e7ufr87ptwpjnpelp30eh0cdtyqxwpm50rnh9chrksuvsn9sdd9
-  - &hosts:
-    - &toaster age1nxj40k5xxanw4h4keryypv4nn5zucr77nsr6zdte9z6y8m4qaayqe324gm
-    - &k3s-server-1 age1l2tk32y8lc0y5asqjczmfdres4gkljmaxh79qhksr08sgk0ucuts53z7ye
-    - &k3s-server-2 age1s2h5thgheatln68az4vf2k8s6mh5k5k5j7wczdgg27khjvtfyasqp0gwwv
-    - &k3s-agent-1 age1wcszc8xlgtff8fw98kp8n500wgd2lsgtdj7kxdsg2z3mpwa9juls329z32
+  - &alex age1h674mq4e7ufr87ptwpjnpelp30eh0cdtyqxwpm50rnh9chrksuvsn9sdd9
+  - &toaster age1nxj40k5xxanw4h4keryypv4nn5zucr77nsr6zdte9z6y8m4qaayqe324gm
+  - &k3s-server-1 age1l2tk32y8lc0y5asqjczmfdres4gkljmaxh79qhksr08sgk0ucuts53z7ye
+  - &k3s-server-2 age1s2h5thgheatln68az4vf2k8s6mh5k5k5j7wczdgg27khjvtfyasqp0gwwv
+  - &k3s-agent-1 age1wcszc8xlgtff8fw98kp8n500wgd2lsgtdj7kxdsg2z3mpwa9juls329z32
+creation_rules:
+  - path_regex: secrets/[^/]+\.(yaml|json|env|ini)$
+    key_groups:
+      - age:
+          - *alex
+          - *toaster
+          - *k3s-server-1
+          - *k3s-server-2
+          - *k3s-agent-1
