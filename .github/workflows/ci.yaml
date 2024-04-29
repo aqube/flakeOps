@@ -16,9 +16,11 @@ concurrency:
 
 env:
   nix-conf: |-
+    accept-flake-config = true
     always-allow-substitutes = true
     max-jobs = auto
   nix-conf-extra: |-
+    accept-flake-config = true
     always-allow-substitutes = true
     max-jobs = auto
     extra-platforms = aarch64-linux
@@ -37,8 +39,8 @@ jobs:
           name: aqube
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
           extraPullNames: nix-community
-      - run: nix flake check -Lvv
-        name: "nix develop --command nix flake check"
+      - run: nix develop --command nix flake check -Lvv
+        name: "nix flake check"
 
   show:
     runs-on: ubuntu-22.04
