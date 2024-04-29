@@ -28,26 +28,31 @@
     # flake-parts for modularizing flake.nix
     flake-parts.url = "github:hercules-ci/flake-parts";
 
+    # run pre-commit hooks
+    pre-commit-hooks-nix.url = "github:cachix/pre-commit-hooks.nix";
   };
 
-  outputs =
-    { self
-    , nixpkgs
-    , home-manager
-    , nixos-hardware
-    , cachix
-    , cachix-deploy-flake
-    , sops-nix
-    , flake-parts
-    , ...
-    } @ inputs:
-    flake-parts.lib.mkFlake { inherit inputs; } {
+  outputs = {
+    self,
+    nixpkgs,
+    home-manager,
+    nixos-hardware,
+    cachix,
+    cachix-deploy-flake,
+    sops-nix,
+    flake-parts,
+    ...
+  } @ inputs:
+    flake-parts.lib.mkFlake {inherit inputs;} {
       # https://flake.parts/debug
       debug = true;
 
+      imports = [
+        inputs.pre-commit-hooks-nix.flakeModule
+      ];
+
       # Original Flake Attributes
       flake = {
-
         nixosConfigurations = {
           # Toaster is a Lenovo ThinkBox with NixOs installed. Currently sitting as a x86 server in the
           # basement in Niedernhausen.
@@ -58,9 +63,11 @@
               sops-nix.nixosModules.sops
               home-manager.nixosModules.home-manager
               {
-                home-manager.useGlobalPkgs = true;
-                home-manager.useUserPackages = true;
-                home-manager.users.aqube = import ./modules/home/aqube/home.nix;
+                home-manager = {
+                  useGlobalPkgs = true;
+                  useUserPackages = true;
+                  users.aqube = import ./modules/home/aqube/home.nix;
+                };
               }
             ];
           };
@@ -74,9 +81,11 @@
               sops-nix.nixosModules.sops
               home-manager.nixosModules.home-manager
               {
-                home-manager.useGlobalPkgs = true;
-                home-manager.useUserPackages = true;
-                home-manager.users.aqube = import ./modules/home/aqube/home.nix;
+                home-manager = {
+                  useGlobalPkgs = true;
+                  useUserPackages = true;
+                  users.aqube = import ./modules/home/aqube/home.nix;
+                };
               }
             ];
           };
@@ -89,9 +98,11 @@
               sops-nix.nixosModules.sops
               home-manager.nixosModules.home-manager
               {
-                home-manager.useGlobalPkgs = true;
-                home-manager.useUserPackages = true;
-                home-manager.users.aqube = import ./modules/home/aqube/home.nix;
+                home-manager = {
+                  useGlobalPkgs = true;
+                  useUserPackages = true;
+                  users.aqube = import ./modules/home/aqube/home.nix;
+                };
               }
             ];
           };
@@ -104,9 +115,11 @@
               sops-nix.nixosModules.sops
               home-manager.nixosModules.home-manager
               {
-                home-manager.useGlobalPkgs = true;
-                home-manager.useUserPackages = true;
-                home-manager.users.aqube = import ./modules/home/aqube/home.nix;
+                home-manager = {
+                  useGlobalPkgs = true;
+                  useUserPackages = true;
+                  users.aqube = import ./modules/home/aqube/home.nix;
+                };
               }
             ];
           };
@@ -114,23 +127,29 @@
       };
 
       # Configure the Systems that you want to build the `perSystem` attributes for
-      systems = [ "x86_64-linux" "x86_64-darwin" "aarch64-darwin" ];
+      systems = ["x86_64-linux" "x86_64-darwin" "aarch64-darwin"];
+
+      # TODO: cross-compilation and emulated builds are tricky. They can result in different hashes and this
+      # would turn the build derivations useless, as they won't be downloaded from aqube.cachix.org
+      # Understand this in details is crucial for the quality of this repo.
+      # - https://discourse.nixos.org/t/cross-compiling-a-devshell/23084/7
 
       # perSystem has some special module parameters. e.g pkgs == inputs.nixpkgs.legacyPackages.${system}.
       # https://flake.parts/module-arguments#persystem-module-parameters
-      perSystem = { self', system, config, pkgs, ... }: {
-
-        # TODO: find a way how I can build aarch64-darwin and x86_64-darwin on github actions
+      perSystem = {
+        self',
+        system,
+        config,
+        pkgs,
+        ...
+      }: {
         packages = {
           # Cachix Deployments
           # TODO: understand how "...config.system.build.toplevel" interprets the "system" part
           # Is this from let system = "x86_64-linux" or from the nixosSystem.system attribute?
-          cachix-deploy-spec =
-            let
-              # FIXME: if this runs in CI, remove it. We can use the pkgs parameter from perSystem
-              # pkgs = import nixpkgs { inherit system; };
-              cachix-deploy-lib = cachix-deploy-flake.lib pkgs;
-            in
+          cachix-deploy-spec = let
+            cachix-deploy-lib = cachix-deploy-flake.lib pkgs;
+          in
             cachix-deploy-lib.spec {
               agents = {
                 toaster = self.nixosConfigurations.toaster.config.system.build.toplevel;
@@ -140,14 +159,27 @@
               };
             };
 
+          # TODO: outsource the sops-updatekeys script
           sops-updatekeys = pkgs.writeShellApplication {
             name = "sops-updatekeys";
-            runtimeInputs = [ pkgs.sops ];
+            runtimeInputs = [pkgs.sops];
             text = ''
               for secretfn in secrets/*.yaml; do
                 sops updatekeys "$secretfn"
               done
             '';
+          };
+        };
+
+        pre-commit = {
+          settings = {
+            hooks = {
+              # https://drakerossman.com/blog/overview-of-nix-formatters-ecosystem
+              alejandra.enable = true;
+              statix.enable = true;
+              nil.enable = true;
+              markdownlint.enable = true;
+            };
           };
         };
 
@@ -166,11 +198,16 @@
               age
               sops
               nil
+              statix
+              alejandra
               self'.packages.sops-updatekeys
             ];
+            shellHook = ''
+              ${config.pre-commit.installationScript}
+              echo 1>&2 "Welcome to the development shell!"
+            '';
           };
         };
-
       };
     };
 }

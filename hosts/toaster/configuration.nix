@@ -1,24 +1,36 @@
-{ config, pkgs, ... }:
-
 {
-  imports =
-    [
-      # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-      # FIXME: use a more elegant mechanism to include modules
-      ../../modules/nixos
-    ];
+  config,
+  pkgs,
+  ...
+}: {
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+    # FIXME: use a more elegant mechanism to include modules
+    ../../modules/nixos
+  ];
 
   # custom modules configuration
   modules.services.postgresql.enable = true;
 
   # Bootloader.
-  boot.loader.grub.enable = true;
-  boot.loader.grub.device = "/dev/sda";
-  boot.loader.grub.useOSProber = true;
+  boot.loader.grub = {
+    enable = true;
+    device = "/dev/sda";
+    useOSProber = true;
+  };
 
-  # cachix deploy agent
-  services.cachix-agent.enable = true;
+  services = {
+    # cachix deploy agent
+    cachix-agent.enable = true;
+    # Enable the OpenSSH daemon.
+    openssh.enable = true;
+    # Configure keymap in X11
+    xserver.xkb = {
+      layout = "us";
+      variant = "";
+    };
+  };
 
   networking.hostName = "toaster"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -48,17 +60,11 @@
     LC_TIME = "de_DE.UTF-8";
   };
 
-  # Configure keymap in X11
-  services.xserver = {
-    layout = "us";
-    xkbVariant = "";
-  };
-
   nix.settings = {
     # give the users in this list the right to specify additional substituters via:
     #    1. `nixConfig.substituters` in `flake.nix`
     #    2. command line args `--options substituters http://xxx`
-    trusted-users = [ "aqube" ];
+    trusted-users = ["aqube"];
     substituters = [
       "https://cache.nixos.org"
       "https://aqube.cachix.org"
@@ -67,14 +73,14 @@
       "aqube.cachix.org-1:ERe7jQ/KiuBHmvNIO8cAxIptfvqDEmw5CWrqXpfWId0="
     ];
     # Enable Flakes
-    experimental-features = [ "nix-command" "flakes" ];
+    experimental-features = ["nix-command" "flakes"];
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.aqube = {
     isNormalUser = true;
     description = "aqube";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = ["networkmanager" "wheel"];
     openssh.authorizedKeys.keys = [
       # alex
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIu53Qed8bnM/iV/ilBYwYSpGHdq2t3Fiogk3epOGg1K"
@@ -107,9 +113,6 @@
 
   # List services that you want to enable:
 
-  # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
-
   security.sudo.wheelNeedsPassword = false;
 
   # Open ports in the firewall.
@@ -125,5 +128,4 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "23.11"; # Did you read the comment?
-
 }

@@ -1,11 +1,12 @@
-{ config, lib, pkgs, ... }:
-
-with lib;
-
-let
-  cfg = config.modules.services.postgresql;
-in
 {
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+with lib; let
+  cfg = config.modules.services.postgresql;
+in {
   options.modules.services.postgresql = {
     enable = mkEnableOption "PostgreSQL database server";
   };
@@ -13,7 +14,7 @@ in
   config = mkIf cfg.enable {
     services.postgresql = {
       enable = true;
-      ensureDatabases = [ "mydatabase" ];
+      ensureDatabases = ["mydatabase"];
       authentication = mkOverride 10 ''
         #type database  DBuser  auth-method
         local all       all     trust
