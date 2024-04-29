@@ -18,6 +18,9 @@ env:
   nix-conf: |-
     always-allow-substitutes = true
     max-jobs = auto
+  nix-conf-extra: |-
+    always-allow-substitutes = true
+    max-jobs = auto
     extra-platforms = aarch64-linux
 
 jobs:
@@ -67,14 +70,14 @@ jobs:
       - uses: cachix/install-nix-action@v26
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
-          extra_nix_config: ${{ env.nix-conf }}
+          extra_nix_config: ${{ env.nix-conf-extra }}
       - uses: docker/setup-qemu-action@v3                                    
       - uses: cachix/cachix-action@v14
         with:
           name: aqube
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
           extraPullNames: nix-community
-      - name: "nix build"
+      - name: "nix build .#cachix-deploy-spec"
         id: build
         run: |
           spec=$(nix build .#cachix-deploy-spec --print-out-paths --print-build-logs)
@@ -89,3 +92,39 @@ jobs:
           CACHIX_ACTIVATE_TOKEN: "${{ secrets.CACHIX_ACTIVATE_TOKEN }}"
         run: |
           cachix deploy activate --async ${{ steps.build.outputs.spec_path }}
+
+  develop:  
+    needs: [ check]
+    strategy:
+      fail-fast: false
+      matrix:
+        # macos-13 = x86_64-darwin / macos-latest = arm64-darwin (M1)
+        os:
+          - runner: ubuntu-latest
+            system: x86_64-linux
+          - runner: macos-13
+            system: x86_64-darwin
+          - runner: macos-latest
+            system: arm64-darwin
+    name: "devShell.${{ matrix.os.system }}"
+    runs-on: ${{ matrix.os.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v26
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          extra_nix_config: ${{ env.nix-conf }}
+      - uses: cachix/cachix-action@v14
+        with:
+          name: aqube
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          extraPullNames: nix-community
+      - name: "nix build .#devShells.${{ matrix.os.system }}"
+        id: build
+        run: |
+          spec=$(nix build .#devShells.${{ matrix.os.system }}.default --print-out-paths --print-build-logs)
+          echo "spec_path=$spec" >> $GITHUB_OUTPUT
+      - name: Push to Cachix
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          cachix push aqube ${{ steps.build.outputs.spec_path }}

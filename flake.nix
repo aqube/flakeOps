@@ -120,6 +120,7 @@
       # https://flake.parts/module-arguments#persystem-module-parameters
       perSystem = { self', system, config, pkgs, ... }: {
 
+        # TODO: find a way how I can build aarch64-darwin and x86_64-darwin on github actions
         packages = {
           # Cachix Deployments
           # TODO: understand how "...config.system.build.toplevel" interprets the "system" part
@@ -139,11 +140,9 @@
               };
             };
 
-          # script to update sops keys
           sops-updatekeys = pkgs.writeShellApplication {
             name = "sops-updatekeys";
             runtimeInputs = [ pkgs.sops ];
-
             text = ''
               for secretfn in secrets/*.yaml; do
                 sops updatekeys "$secretfn"
@@ -152,6 +151,7 @@
           };
         };
 
+        # nix run
         apps = {
           sops-updatekeys = {
             type = "app";
@@ -159,19 +159,17 @@
           };
         };
 
-
-
         # nix develop
-        #   devShells = {
-        #     default = nixpkgs.mkShell {
-        #       packages = with pkgs; [
-        #         age
-        #         sops
-        #         nil
-        #       ];
-        #     };
-        #   };
-        # };
+        devShells = {
+          default = pkgs.mkShell {
+            packages = with pkgs; [
+              age
+              sops
+              nil
+              self'.packages.sops-updatekeys
+            ];
+          };
+        };
 
       };
     };
