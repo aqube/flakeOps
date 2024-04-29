@@ -105,7 +105,7 @@ jobs:
           - runner: macos-13
             system: x86_64-darwin
           - runner: macos-latest
-            system: arm64-darwin
+            system: aarch64-darwin
     name: "devShell.${{ matrix.os.system }}"
     runs-on: ${{ matrix.os.runner }}
     steps:
