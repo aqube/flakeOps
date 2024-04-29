@@ -1,9 +1,12 @@
-{ hostname, username, pkgs, ... }:
-
 {
+  hostname,
+  username,
+  pkgs,
+  ...
+}: {
   boot = {
     kernelPackages = pkgs.linuxKernel.packages.linux_rpi4;
-    initrd.availableKernelModules = [ "xhci_pci" "usbhid" "usb_storage" ];
+    initrd.availableKernelModules = ["xhci_pci" "usbhid" "usb_storage"];
     loader = {
       grub.enable = false;
       generic-extlinux-compatible.enable = true;
@@ -15,7 +18,7 @@
     "/" = {
       device = "/dev/disk/by-label/NIXOS_SD";
       fsType = "ext4";
-      options = [ "noatime" ];
+      options = ["noatime"];
     };
   };
 
@@ -42,13 +45,13 @@
   };
 
   # Install system wide packages
-  environment.systemPackages = with pkgs; [ git vim ];
+  environment.systemPackages = with pkgs; [git vim];
 
   nix.settings = {
     # give the users in this list the right to specify additional substituters via:
     #    1. `nixConfig.substituters` in `flake.nix`
     #    2. command line args `--options substituters http://xxx`
-    trusted-users = [ username ];
+    trusted-users = [username];
     substituters = [
       "https://cache.nixos.org"
       "https://aqube.cachix.org"
@@ -57,14 +60,14 @@
       "aqube.cachix.org-1:ERe7jQ/KiuBHmvNIO8cAxIptfvqDEmw5CWrqXpfWId0="
     ];
     # Enable Flakes
-    experimental-features = [ "nix-command" "flakes" ];
+    experimental-features = ["nix-command" "flakes"];
   };
 
   users = {
     mutableUsers = false;
     users."${username}" = {
       isNormalUser = true;
-      extraGroups = [ "wheel" ];
+      extraGroups = ["wheel"];
       # Warning: This password is only used for setting up isolated and local machines
       # and removed after that.
       password = "aqube";

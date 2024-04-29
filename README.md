@@ -29,9 +29,23 @@ We use a couple of upstream inputs and tools for our flake. The main ones are:
 - [snowfall lib](https://github.com/snowfallorg/lib) - opinionated library for flakes. Looks like a clean way to structure a flake repository and avoid writing boilerplate code.
 - [nix-direnv](https://github.com/nix-community/nix-direnv) to use direnv with nix. This would make it easier to work with this repository by automatically activating a devshell with all required tools.
 
-# Usage
+# 💻 Development
 
-## Secrets
+## DevShell
+
+The flake in this repository provides a configured [development environment](https://nixos.wiki/wiki/Development_environment_with_nix-shell#nix_develop) that can be started with `nix develop`. 
+The environments are also built on Github Actions for different hostsystems and pushed to `aqube.cachix.org`, this way starting shells is fast and easy.
+
+Because the development environment contains custom scripts, required packages and pre-configured git hooks, it's recommended to use the development environment for all development tasks.
+
+### Automatic Activation
+
+The [.envrc](./.envrc) file contains the configuration for [direnv](https://direnv.net/). This way, the development environment is automatically activated when entering the repository folder. This also requires the [nix-direnv](https://github.com/nix-community/nix-direnv) package, that provides further local caching and better integration with nix flakes.
+An additional feature of direnv is the local execution of your own, configured shell environment and not an empty bash shell.
+
+To enable direnv, you need to run `direnv allow` once.
+
+## 🔐 Secrets
 
 We use [sops-nix](https://github.com/Mic92/sops-nix) to encrypt secrets. This allows us to use sops for secrets management, including all available backends. The access configuration is configured in the [.sops.yaml](./.sops.yaml) file. The secrets are stored in the [secrets](./secrets) directory.
 
@@ -85,8 +99,9 @@ Because we also store the secrets encrypted in the repository, it's then also en
 ### Misc
 
 - [Nix Pills](https://nixos.org/guides/nix-pills/index.html) - a bit outdated
-- https://github.com/hugolgst/nixos-raspberry-pi-cluster
-- https://haseebmajid.dev/posts/2023-11-18-how-i-setup-my-raspberry-pi-cluster-with-nixos/
-- https://myme.no/posts/2022-12-01-nixos-on-raspberrypi.html#cross-compiling
-- https://jamesguthrie.ch/blog/deploy-nixos-raspi/
-- https://ayats.org/blog/no-flake-utils/ - A blog post that states you don't need any flake utils
+- [https://github.com/hugolgst/nixos-raspberry-pi-cluster](https://github.com/hugolgst/nixos-raspberry-pi-cluster)
+- [https://haseebmajid.dev/posts/2023-11-18-how-i-setup-my-raspberry-pi-cluster-with-nixos/](https://haseebmajid.dev/posts/2023-11-18-how-i-setup-my-raspberry-pi-cluster-with-nixos/)
+- [https://myme.no/posts/2022-12-01-nixos-on-raspberrypi.html#cross-compiling](https://myme.no/posts/2022-12-01-nixos-on-raspberrypi.html#cross-compiling)
+- [https://jamesguthrie.ch/blog/deploy-nixos-raspi/](https://jamesguthrie.ch/blog/deploy-nixos-raspi/)
+- [https://ayats.org/blog/no-flake-utils/](https://ayats.org/blog/no-flake-utils/) - A blog post that states you don't need any flake utils
+- [https://discourse.nixos.org/t/basic-flake-run-existing-python-bash-script/19886/3](https://discourse.nixos.org/t/basic-flake-run-existing-python-bash-script/19886/3) - A discourse post about running existing scripts with flakes

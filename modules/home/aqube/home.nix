@@ -1,5 +1,8 @@
-{ config, pkgs, ... }:
 {
+  config,
+  pkgs,
+  ...
+}: {
   # Home Manager needs a bit of information about you and the
   # paths it should manage.
   home = {
@@ -16,7 +19,6 @@
     # changes in each release.
     stateVersion = "23.11";
   };
-
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
@@ -44,14 +46,12 @@
       enableBashIntegration = true;
       enableZshIntegration = true;
 
-      settings =
-        {
-          character = {
-            success_symbol = "[›](bold green)";
-            error_symbol = "[›](bold red)";
-          };
+      settings = {
+        character = {
+          success_symbol = "[›](bold green)";
+          error_symbol = "[›](bold red)";
         };
+      };
     };
   };
-
 }

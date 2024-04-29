@@ -141,6 +141,7 @@
         system,
         config,
         pkgs,
+        lib,
         ...
       }: {
         packages = {
@@ -159,16 +160,32 @@
               };
             };
 
-          # TODO: outsource the sops-updatekeys script
-          sops-updatekeys = pkgs.writeShellApplication {
-            name = "sops-updatekeys";
-            runtimeInputs = [pkgs.sops];
-            text = ''
-              for secretfn in secrets/*.yaml; do
-                sops updatekeys "$secretfn"
-              done
+          # sops-updatekeys = pkgs.writeShellApplication {
+          #   name = "sops-updatekeys";
+          #   runtimeInputs = [pkgs.sops];
+          #   text = ''
+          #     for secretfn in secrets/*.yaml; do
+          #       sops updatekeys "$secretfn"
+          #     done
+          #   '';
+          # };
+          sops-updatekeys = with pkgs;
+            runCommand "sops-updatekeys" {
+              script = ./scripts/sops-updatekeys.sh;
+              nativeBuildInputs = [makeWrapper];
+            } ''
+              makeWrapper $script $out/bin/sops-updatekeys \
+                --prefix PATH : ${lib.makeBinPath [sops]}
             '';
-          };
+
+          sops-check-encryption = with pkgs;
+            runCommand "sops-check-encryption" {
+              script = ./scripts/sops-check-encryption.sh;
+              nativeBuildInputs = [makeWrapper];
+            } ''
+              makeWrapper $script $out/bin/sops-check-encryption \
+                --prefix PATH : ${lib.makeBinPath [sops]}
+            '';
         };
 
         pre-commit = {
@@ -178,7 +195,13 @@
               alejandra.enable = true;
               statix.enable = true;
               nil.enable = true;
-              markdownlint.enable = true;
+              shellcheck.enable = true;
+              sops-check-encryption = {
+                enable = true;
+                name = "sops-check-encryption";
+                description = "Check if all yaml files in ./secret are encrypted with sops";
+                entry = "${self'.packages.sops-check-encryption}/bin/sops-check-encryption \"?*.yaml\" \"./secrets\"";
+              };
             };
           };
         };
@@ -188,6 +211,10 @@
           sops-updatekeys = {
             type = "app";
             program = "${self'.packages.sops-updatekeys}/bin/sops-updatekeys";
+          };
+          sops-check-encryption = {
+            type = "app";
+            program = "${self'.packages.sops-check-encryption}/bin/sops-check-encryption";
           };
         };
 
@@ -200,7 +227,9 @@
               nil
               statix
               alejandra
+              shellcheck
               self'.packages.sops-updatekeys
+              self'.packages.sops-check-encryption
             ];
             shellHook = ''
               ${config.pre-commit.installationScript}

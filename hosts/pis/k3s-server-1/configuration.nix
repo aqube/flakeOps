@@ -1,13 +1,15 @@
-{ config, pkgs, lib, ... }:
-
-let
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}: let
   raspberryPi4 = import ../raspberry-pi-4.nix {
     inherit pkgs;
     hostname = "k3s-server-1";
     username = "aqube";
   };
-in
-{
+in {
   imports = [
     raspberryPi4
     ../../../modules/nixos
