@@ -38,7 +38,7 @@ jobs:
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
           extraPullNames: nix-community
       - run: nix flake check -Lvv
-        name: "nix flake check"
+        name: "nix develop --command nix flake check"
 
   show:
     runs-on: ubuntu-22.04

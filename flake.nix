@@ -199,7 +199,9 @@
               sops-check-encryption = {
                 enable = true;
                 name = "sops-check-encryption";
+                package = self'.packages.sops-check-encryption;
                 description = "Check if all yaml files in ./secret are encrypted with sops";
+                always_run = true;
                 entry = "${self'.packages.sops-check-encryption}/bin/sops-check-encryption \"?*.yaml\" \"./secrets\"";
               };
             };
