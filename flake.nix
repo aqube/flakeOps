@@ -21,15 +21,18 @@
 
     # sops-nix for encrypted secrets
     sops-nix.url = "github:Mic92/sops-nix";
+    sops-nix.inputs.nixpkgs.follows = "nixpkgs";
 
     # Cachix Deployment utils
     cachix-deploy-flake.url = "github:cachix/cachix-deploy-flake";
+    cachix-deploy-flake.inputs.nixpkgs.follows = "nixpkgs";
 
     # flake-parts for modularizing flake.nix
     flake-parts.url = "github:hercules-ci/flake-parts";
 
     # run pre-commit hooks
     pre-commit-hooks-nix.url = "github:cachix/pre-commit-hooks.nix";
+    pre-commit-hooks-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = {
@@ -188,7 +191,11 @@
             '';
         };
 
+        # FIXME: our self-build shellscripts for sops-check-encryption don't work in the check sandbox on GitHub.
+        # We need to define separate hook definitions for pre-commit and devShells. For now we deactivate
+        # the checks but keep the pre-commit hooks.
         pre-commit = {
+          check.enable = false;
           settings = {
             hooks = {
               # https://drakerossman.com/blog/overview-of-nix-formatters-ecosystem
