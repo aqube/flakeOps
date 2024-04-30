@@ -11,7 +11,10 @@
   ];
 
   # custom modules configuration
-  modules.services.postgresql.enable = true;
+  modules.services.k3s = {
+    enable = true;
+    role = "database";
+  };
 
   # Bootloader.
   boot.loader.grub = {
