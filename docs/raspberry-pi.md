@@ -37,4 +37,9 @@ Because of this, you just have to
 
 ### Allow the host to decrypt sops secrets
 
+We create a new [age](https://github.com/FiloSottile/age) key for the host and add it to the `sops` configuration. This way the host can decrypt the secrets in the repository.
 
+1. Create a new age key on the host with `nix-shell -p ssh-to-age --run 'cat /etc/ssh/ssh_host_ed25519_key.pub | ssh-to-age'`
+2. Create a new entry in the [.sops.yaml](../.sops.yaml) file with the new key
+3. Use the prepared Nix application `sops-updatekeys` to update the keys in the repository with `nix run .#sops-updatekeys`
+4. Commit and push your changes
