@@ -177,6 +177,7 @@
                 k3s-server-1 = self.nixosConfigurations.k3s-server-1.config.system.build.toplevel;
                 k3s-server-2 = self.nixosConfigurations.k3s-server-2.config.system.build.toplevel;
                 k3s-agent-1 = self.nixosConfigurations.k3s-agent-1.config.system.build.toplevel;
+                k3s-agent-2 = self.nixosConfigurations.k3s-agent-2.config.system.build.toplevel;
               };
             };
 

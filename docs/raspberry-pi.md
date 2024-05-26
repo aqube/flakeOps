@@ -32,6 +32,9 @@ Because of this, you just have to
 
 1. Create a new host configuration in the `hosts` directory.
 2. Add a new `nixpkgs.lib.nixosSystem` to the `flake.nixosConfiguration` [output](https://flake.parts/options/flake-parts#opt-flake.nixosConfigurations).  See the available systems for examples, as we also add nixos-hardware modules for better Raspberry-Pi support or nix-sops. 
-3. Check that you use the correct name for the configuration and import the right host configuration module. The name must match the configured Cachix agent and the hostname of the system.
+3. The actual deployment is done by creating a `deployment.json` file, that is then pushed to the `Cachix Deploy` service. We use the `package` output of our flake for this and create a `cachix-deploy-lib` package that must contain the references to all `nixosConfigurations` that should be deployed. This is the time to add the new host configuration to the `cachix-deploy-lib` package.
+4. Check that you use the correct name for the configuration and import the right host configuration module. The name must match the configured Cachix agent and the hostname of the system.
+
+### Allow the host to decrypt sops secrets
 
 
