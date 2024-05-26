@@ -31,6 +31,9 @@ We use a couple of upstream inputs and tools for our flake. The main ones are:
 
 # 💻 Development
 
+## 🚀 Add a new Device
+1. For Raspberry Pis follow the [install and setup instructions](./docs/raspberry-pi.md).
+
 ## DevShell
 
 The flake in this repository provides a configured [development environment](https://nixos.wiki/wiki/Development_environment_with_nix-shell#nix_develop) that can be started with `nix develop`. 
