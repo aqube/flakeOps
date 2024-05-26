@@ -126,6 +126,23 @@
               }
             ];
           };
+
+          k3s-agent-2 = nixpkgs.lib.nixosSystem {
+            system = "aarch64-linux";
+            modules = [
+              ./hosts/pis/k3s-agent-2/configuration.nix
+              nixos-hardware.nixosModules.raspberry-pi-4
+              sops-nix.nixosModules.sops
+              home-manager.nixosModules.home-manager
+              {
+                home-manager = {
+                  useGlobalPkgs = true;
+                  useUserPackages = true;
+                  users.aqube = import ./modules/home/aqube/home.nix;
+                };
+              }
+            ];
+          };
         };
       };
 
