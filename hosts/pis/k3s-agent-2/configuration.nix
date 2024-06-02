@@ -14,6 +14,4 @@ in {
     raspberryPi4
     ../../../modules/nixos
   ];
-
-  modules.services.k3s.enable = true;
 }
