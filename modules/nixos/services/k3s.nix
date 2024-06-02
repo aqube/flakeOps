@@ -66,8 +66,8 @@ in {
           # TYPE  DATABASE  USER  ADDRESS           METHOD
             local all       all                     trust
           # ipv4
-            host  all       all   192.168.178.0/32  trust
-            host  all       all   192.168.192.0/32  trust
+            host  all       all   192.168.178.0/24  trust
+            host  all       all   192.168.192.0/24  trust
         '';
       };
       networking.firewall.allowedTCPPorts = [5432];
